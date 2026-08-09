@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Planning de Maman</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FDF4F5;
+    --paper-edge:#F8E1E6;
+    --ink:#3B2A30;
+    --ink-soft:#8B6B73;
+    --teal:#D9718F;
+    --teal-bg:#FBE1E7;
+    --coral:#C94F72;
+    --coral-bg:#F6D9E1;
+    --line:#F0D9DE;
+    --rest-bg:#F0DCE0;
+    --banner:#CB93A6;
+    --mission-bg:#F3EAF0;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:40px;
+  }
+  .banner{
+    position:relative;
+    background:var(--banner);
+    color:#fff;
+    padding:22px 18px 26px;
+    border-radius:0 0 22px 22px;
+    box-shadow:0 6px 16px rgba(59,42,48,0.15);
+  }
+  .banner-top{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .pin{ font-size:20px; filter:drop-shadow(0 2px 2px rgba(0,0,0,0.25)); }
+  .banner-actions{ display:flex; gap:8px; }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:26px;
+    margin:10px 0 2px;
+    letter-spacing:-0.01em;
+  }
+  .subtitle{ font-size:13px; opacity:0.9; font-weight:500; }
+  .lock-btn, .settings-btn{
+    background:rgba(255,255,255,0.18);
+    border:1px solid rgba(255,255,255,0.45);
+    color:#fff;
+    border-radius:999px;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:600;
+    font-family:'Inter',sans-serif;
+  }
+  .settings-btn{ display:none; padding:8px 12px; }
+  .settings-btn.show{ display:inline-block; }
+  .lock-btn.active{ background:var(--coral); border-color:var(--coral); }
+  .week-nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 18px 4px;
+  }
+  .week-nav button{
+    background:var(--paper-edge);
+    border:1px solid var(--line);
+    font-size:18px;
+    color:var(--teal);
+    padding:4px 14px;
+    border-radius:999px;
+    font-weight:700;
+  }
+  .week-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    font-weight:500;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+  .week-entry-btn{
+    display:none;
+    margin:14px 14px 0;
+    width:calc(100% - 28px);
+    background:var(--teal);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:13px;
+    font-weight:700;
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+  }
+  .week-entry-btn.show{ display:block; }
+
+  .days-list{ margin-top:14px; }
+  .day-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px;
+    margin:0 14px 10px;
+  }
+  .day-card.editable{ cursor:pointer; }
+  .day-card.repos, .day-card.vacances{ background:var(--rest-bg); }
+  .day-card-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .day-card .day-info{ display:flex; flex-direction:column; min-width:70px; }
+  .day-card .day-name{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:15px;
+  }
+  .day-card .day-date{ font-size:11px; color:var(--ink-soft); }
+  .day-card .day-content{ flex:1; text-align:right; }
+  .day-card .day-hours{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:16px;
+    font-weight:600;
+    color:var(--teal);
+  }
+  .day-card .day-type{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-top:2px;
+    font-weight:600;
+  }
+  .day-card.repos .day-hours, .day-card.vacances .day-hours{
+    color:var(--ink-soft); font-family:'Inter',sans-serif;
+  }
+  .day-card.empty .day-hours{ color:var(--line); font-family:'Inter',sans-serif; font-size:13px; }
+  .day-card .plus-hint{ font-size:12px; color:var(--teal); font-weight:600; }
+  .day-missions{
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px dashed var(--line);
+  }
+  .day-mission-item{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:var(--ink-soft);
+    padding:2px 0;
+  }
+  .day-mission-item .m-time{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--coral); }
+
+  .totals{
+    margin:14px 14px 0;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .totals h3{ font-family:'Fraunces',serif; font-size:14px; margin:0; color:var(--ink-soft); font-weight:600; }
+  .totals .hours{ font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:600; color:var(--teal); }
+
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(59,42,48,0.45);
+    display:flex;align-items:flex-end;justify-content:center;
+    z-index:50;
+  }
+  .overlay.hidden{ display:none; }
+  .modal{
+    background:var(--paper);
+    width:100%;
+    max-width:480px;
+    border-radius:20px 20px 0 0;
+    padding:22px 20px 28px;
+    box-shadow:0 -8px 24px rgba(0,0,0,0.2);
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  .modal h2{ font-family:'Fraunces',serif; font-size:19px; margin:0 0 14px; }
+  .field-label{
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin:14px 0 6px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+  }
+  .time-row{ display:flex; gap:10px; }
+  select, input[type="text"]{
+    width:100%;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+    background:#fff;
+    color:var(--ink);
+  }
+  input[type="text"]{ font-family:'Inter',sans-serif; }
+  input[type="color"]{
+    width:100%;
+    height:44px;
+    padding:4px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#fff;
+  }
+  .modal-actions{ display:flex; gap:10px; margin-top:22px; }
+  .btn{
+    flex:1;
+    padding:13px;
+    border-radius:12px;
+    border:none;
+    font-weight:700;
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+  }
+  .btn-primary{ background:var(--teal); color:#fff; }
+  .btn-danger{ background:var(--coral-bg); color:var(--coral); }
+  .btn-ghost{ background:none; color:var(--ink-soft); }
+  .code-input{
+    width:100%;
+    padding:14px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    font-size:16px;
+    text-align:center;
+    letter-spacing:0.05em;
+    margin-top:4px;
+  }
+  .error-msg{ color:var(--coral); font-size:12px; font-weight:600; margin-top:8px; display:none; }
+  .status{ text-align:center; font-size:12px; color:var(--ink-soft); padding:10px; }
+
+  .day-nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .day-nav-label{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:14px;
+    text-align:center;
+    flex:1;
+  }
+  .nav-arrow{
+    background:var(--paper-edge);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:9px 10px;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--teal);
+    white-space:nowrap;
+    font-family:'Inter',sans-serif;
+  }
+
+  .missions-box{
+    margin-top:8px;
+    background:var(--mission-bg);
+    border-radius:12px;
+    padding:10px;
+  }
+  .mission-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    align-items:center;
+    margin-bottom:8px;
+  }
+  .mission-row select{ font-size:12px; padding:8px 4px; flex:1; min-width:70px; }
+  .mission-row input[type="text"]{ font-size:12px; padding:8px 6px; flex:1 1 100%; }
+  .mission-remove{
+    background:none;
+    border:none;
+    color:var(--coral);
+    font-size:18px;
+    font-weight:700;
+    padding:0 4px;
+    flex-shrink:0;
+  }
+  .add-mission-btn{
+    width:100%;
+    background:#fff;
+    border:1px dashed var(--teal);
+    color:var(--teal);
+    border-radius:10px;
+    padding:8px;
+    font-size:12.5px;
+    font-weight:700;
+    font-family:'Inter',sans-serif;
+  }
+
+  .week-entry-row{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px;
+    margin-top:10px;
+  }
+  .week-entry-row .day-name{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:14px;
+    margin-bottom:8px;
+  }
+  .row-time{ margin-top:10px; }
+  .row-time .time-row{ margin-bottom:0; }
+  .settings-note{ font-size:12px; color:var(--ink-soft); margin-top:6px; }
+  .settings-saved{ font-size:12px; color:var(--teal); font-weight:700; margin-top:8px; display:none; }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <div class="banner-top">
+    <span class="pin">📌</span>
+    <div class="banner-actions">
+      <button class="settings-btn" id="settingsBtn">⚙️</button>
+      <button class="lock-btn" id="lockBtn">🔒 Admin</button>
+    </div>
+  </div>
+  <h1>Planning de Maman</h1>
+  <div class="subtitle">Horaires de la semaine, à jour en temps réel</div>
+</div>
+
+<div class="week-nav">
+  <button id="prevWeek">‹</button>
+  <div class="week-label" id="weekLabel"></div>
+  <button id="nextWeek">›</button>
+</div>
+
+<button class="week-entry-btn" id="weekEntryBtn">📝 Saisir les horaires de la semaine</button>
+
+<div class="days-list" id="daysList"></div>
+
+<div class="totals" id="totals"></div>
+
+<div class="status" id="status">Connexion au planning…</div>
+
+<div class="overlay hidden" id="codeOverlay">
+  <div class="modal">
+    <h2>Débloquer le mode modification</h2>
+    <input type="password" class="code-input" id="codeInput" placeholder="Code admin" inputmode="text">
+    <div class="error-msg" id="codeError">Code incorrect.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="codeCancel">Annuler</button>
+      <button class="btn btn-primary" id="codeSubmit">Valider</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="shiftOverlay">
+  <div class="modal">
+    <h2 id="shiftModalTitle">Créneau</h2>
+    <div class="field-label">Jour</div>
+    <div class="day-nav">
+      <button type="button" class="nav-arrow" id="dayPrevBtn">‹ Précédent</button>
+      <div class="day-nav-label" id="dayNavLabel"></div>
+      <button type="button" class="nav-arrow" id="dayNextBtn">Suivant ›</button>
+    </div>
+
+    <div class="field-label">Type</div>
+    <select id="typeSelect">
+      <option value="">Aucun</option>
+      <option value="caisse">Caisse</option>
+      <option value="station">Station</option>
+      <option value="repos">Repos</option>
+      <option value="vacances">Vacances</option>
+    </select>
+
+    <div id="timeFields">
+      <div class="field-label">Horaires</div>
+      <div class="time-row">
+        <select id="startSelect"></select>
+        <select id="endSelect"></select>
+      </div>
+
+      <div class="field-label">Missions dans ce créneau (optionnel)</div>
+      <div class="missions-box">
+        <div id="missionsList"></div>
+        <button type="button" class="add-mission-btn" id="addMissionBtn">＋ Ajouter une mission</button>
+      </div>
+    </div>
+
+    <div class="error-msg" id="shiftError">L'heure de fin doit être après le début.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="shiftClose">Fermer</button>
+      <button class="btn btn-danger" id="shiftDelete" style="display:none;">Supprimer</button>
+      <button class="btn btn-primary" id="shiftSave">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="weekOverlay">
+  <div class="modal">
+    <h2>Horaires de la semaine</h2>
+    <div id="weekEntryRows"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="weekEntryCancel">Annuler</button>
+      <button class="btn btn-primary" id="weekEntrySave">Tout enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="settingsOverlay">
+  <div class="modal">
+    <h2>Réglages</h2>
+
+    <div class="field-label">Nouveau code admin</div>
+    <input type="text" id="newCodeInput" placeholder="Nouveau code">
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="saveCodeBtn">Changer le code</button>
+    </div>
+
+    <div class="field-label" style="margin-top:24px;">Couleur du bandeau</div>
+    <input type="color" id="colorBanner">
+    <div class="field-label">Couleur d'accent (boutons, horaires)</div>
+    <input type="color" id="colorAccent">
+    <div class="field-label">Couleur de fond</div>
+    <input type="color" id="colorPaper">
+    <div class="settings-note">Ces couleurs sont visibles par tout le monde, en temps réel.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="resetColorsBtn">Réinitialiser</button>
+      <button class="btn btn-primary" id="saveColorsBtn">Enregistrer les couleurs</button>
+    </div>
+    <div class="settings-saved" id="settingsSaved">Enregistré ✓</div>
+
+    <div class="modal-actions" style="margin-top:24px;">
+      <button class="btn btn-ghost" id="settingsClose">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-firestore-compat.min.js"></script>
+<script>
+/* ---------- Config ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyCUD6Jqw_Ex6mKIWkdH6oTHahjWS5Vcn0M",
+  authDomain: "planning-maman-e0bb4.firebaseapp.com",
+  projectId: "planning-maman-e0bb4",
+  storageBucket: "planning-maman-e0bb4.firebasestorage.app",
+  messagingSenderId: "608749619355",
+  appId: "1:608749619355:web:39126edde299bcda2f5e3e"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const docRef = db.collection('planning').doc('shifts');
+const configRef = db.collection('planning').doc('config');
+
+const DEFAULT_ADMIN_CODE = "Gribouille9094";
+const DEFAULT_COLORS = { banner:'#CB93A6', teal:'#D9718F', paper:'#FDF4F5' };
+let appConfig = { adminCode: DEFAULT_ADMIN_CODE, colors: {...DEFAULT_COLORS} };
+
+const DAY_NAMES_SHORT = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+const MONTHS_FR = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const DAY_START = 6*60;
+const DAY_END = 23*60;
+const STEP = 5;
+
+const TYPE_LABELS = { caisse:'Caisse', station:'Station', repos:'Repos', vacances:'Vacances' };
+const FULL_DAY_TYPES = ['repos','vacances'];
+const MISSION_TYPES = [
+  { id:'pause_station', label:'Pause station' },
+  { id:'reunion', label:'Réunion' },
+  { id:'sandwichs', label:'Sandwichs' },
+  { id:'autre', label:'Autre' },
+];
+
+let shifts = [];
+let isAdmin = localStorage.getItem('planningAdmin') === '1';
+let editingShiftId = null;
+let refDate = new Date();
+let modalDate = new Date();
+let currentMissions = [];
+
+/* ---------- Date helpers ---------- */
+function getMonday(d){
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  date.setDate(date.getDate() + diff);
+  date.setHours(0,0,0,0);
+  return date;
+}
+function isoDate(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function parseIso(str){
+  const [y,m,d] = str.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function weekDates(){
+  const monday = getMonday(refDate);
+  return Array.from({length:7}, (_,i)=>{
+    const d = new Date(monday);
+    d.setDate(monday.getDate()+i);
+    return d;
+  });
+}
+function minToLabel(m){
+  const h = Math.floor(m/60), mm = m%60;
+  return String(h).padStart(2,'0')+'h'+String(mm).padStart(2,'0');
+}
+function isoWeekNumber(d){
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1)/7);
+}
+function buildTimeOptions(select, defaultMin){
+  select.innerHTML = '';
+  for(let m=DAY_START; m<=DAY_END; m+=STEP){
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = minToLabel(m);
+    if(m === defaultMin) opt.selected = true;
+    select.appendChild(opt);
+  }
+}
+function el(tag, cls){
+  const e = document.createElement(tag);
+  if(cls) e.className = cls;
+  return e;
+}
+function missionLabel(m){
+  if(m.type === 'autre') return m.customLabel || 'Autre';
+  const found = MISSION_TYPES.find(t=>t.id===m.type);
+  return found ? found.label : 'Mission';
+}
+
+/* ---------- Week label & nav ---------- */
+function renderWeekLabel(dates){
+  const start = dates[0], end = dates[6];
+  const range = start.getMonth()===end.getMonth()
+    ? `${start.getDate()} – ${end.getDate()} ${MONTHS_FR[end.getMonth()]} ${end.getFullYear()}`
+    : `${start.getDate()} ${MONTHS_FR[start.getMonth()]} – ${end.getDate()} ${MONTHS_FR[end.getMonth()]} ${end.getFullYear()}`;
+  const weekNo = isoWeekNumber(start);
+  document.getElementById('weekLabel').textContent = `${range} · Semaine ${weekNo}`;
+}
+document.getElementById('prevWeek').addEventListener('click', ()=>{
+  refDate.setDate(refDate.getDate()-7);
+  renderDaysList();
+});
+document.getElementById('nextWeek').addEventListener('click', ()=>{
+  refDate.setDate(refDate.getDate()+7);
+  renderDaysList();
+});
+
+/* ---------- Days list rendering ---------- */
+function renderDaysList(){
+  const dates = weekDates();
+  renderWeekLabel(dates);
+
+  const list = document.getElementById('daysList');
+  list.innerHTML = '';
+
+  dates.forEach(d=>{
+    const dateStr = isoDate(d);
+    const shift = shifts.find(s=>s.date===dateStr);
+
+    const card = el('div','day-card'+(isAdmin?' editable':'')+(shift?` ${shift.type}`:' empty'));
+
+    const top = el('div','day-card-top');
+    const info = el('div','day-info');
+    info.innerHTML = `<span class="day-name">${DAY_NAMES_SHORT[(d.getDay()+6)%7]}</span><span class="day-date">${d.getDate()} ${MONTHS_FR[d.getMonth()].slice(0,3)}</span>`;
+
+    const content = el('div','day-content');
+    if(shift && FULL_DAY_TYPES.includes(shift.type)){
+      content.innerHTML = `<span class="day-hours">${TYPE_LABELS[shift.type]}</span>`;
+    } else if(shift){
+      content.innerHTML = `<span class="day-hours">${minToLabel(shift.start)} → ${minToLabel(shift.end)}</span><div class="day-type">${TYPE_LABELS[shift.type]}</div>`;
+    } else {
+      content.innerHTML = isAdmin ? `<span class="plus-hint">＋ Ajouter</span>` : `<span class="day-hours">—</span>`;
+    }
+    top.appendChild(info);
+    top.appendChild(content);
+    card.appendChild(top);
+
+    if(shift && shift.missions && shift.missions.length){
+      const missionsBox = el('div','day-missions');
+      shift.missions.forEach(m=>{
+        const item = el('div','day-mission-item');
+        item.innerHTML = `<span>${missionLabel(m)}</span><span class="m-time">${minToLabel(m.start)}–${minToLabel(m.end)}</span>`;
+        missionsBox.appendChild(item);
+      });
+      card.appendChild(missionsBox);
+    }
+
+    if(isAdmin){
+      card.addEventListener('click', ()=>{
+        openShiftModal(d);
+      });
+    }
+
+    list.appendChild(card);
+  });
+
+  renderTotals(dates);
+  document.getElementById('weekEntryBtn').classList.toggle('show', isAdmin);
+}
+
+function renderTotals(dates){
+  const dateSet = dates.map(isoDate);
+  let mins = 0;
+  shifts.filter(s=>dateSet.includes(s.date) && !FULL_DAY_TYPES.includes(s.type)).forEach(s=>{ mins += (s.end - s.start); });
+  const h = Math.floor(mins/60), m = mins%60;
+  document.getElementById('totals').innerHTML =
+    `<h3>Total de la semaine</h3><span class="hours">${h}h${String(m).padStart(2,'0')}</span>`;
+}
+
+/* ---------- Shift modal (with day-by-day navigation) ---------- */
+function openShiftModal(date){
+  modalDate = new Date(date);
+  loadDayIntoModal();
+  document.getElementById('shiftOverlay').classList.remove('hidden');
+}
+
+function loadDayIntoModal(){
+  const dateStr = isoDate(modalDate);
+  const shift = shifts.find(s=>s.date===dateStr);
+  editingShiftId = shift ? shift.id : null;
+
+  document.getElementById('dayNavLabel').textContent =
+    `${DAY_NAMES_SHORT[(modalDate.getDay()+6)%7]} ${modalDate.getDate()} ${MONTHS_FR[modalDate.getMonth()].slice(0,3)}`;
+  document.getElementById('shiftDelete').style.display = shift ? 'block' : 'none';
+  document.getElementById('shiftError').style.display = 'none';
+
+  document.getElementById('typeSelect').value = shift ? shift.type : '';
+  buildTimeOptions(document.getElementById('startSelect'), shift ? shift.start : 9*60);
+  buildTimeOptions(document.getElementById('endSelect'), shift ? shift.end : 17*60);
+
+  currentMissions = shift && shift.missions ? shift.missions.map(m=>({...m})) : [];
+  renderMissionsUI();
+  toggleTimeFields();
+}
+function toggleTimeFields(){
+  const type = document.getElementById('typeSelect').value;
+  document.getElementById('timeFields').style.display = (type && !FULL_DAY_TYPES.includes(type)) ? 'block' : 'none';
+}
+document.getElementById('typeSelect').addEventListener('change', toggleTimeFields);
+
+function renderMissionsUI(){
+  const list = document.getElementById('missionsList');
+  list.innerHTML = '';
+  currentMissions.forEach((m, idx)=>{
+    const row = el('div','mission-row');
+    const typeOptions = MISSION_TYPES.map(t=>`<option value="${t.id}" ${m.type===t.id?'selected':''}>${t.label}</option>`).join('');
+    row.innerHTML = `
+      <select class="m-start"></select>
+      <select class="m-end"></select>
+      <select class="m-type">${typeOptions}</select>
+      <button type="button" class="mission-remove">×</button>
+      <input type="text" class="m-custom" placeholder="Préciser..." style="display:${m.type==='autre'?'block':'none'}">
+    `;
+    const startSel = row.querySelector('.m-start');
+    const endSel = row.querySelector('.m-end');
+    const typeSel = row.querySelector('.m-type');
+    const customInput = row.querySelector('.m-custom');
+    buildTimeOptions(startSel, m.start);
+    buildTimeOptions(endSel, m.end);
+    customInput.value = m.customLabel || '';
+
+    startSel.addEventListener('change', ()=>{ currentMissions[idx].start = parseInt(startSel.value,10); });
+    endSel.addEventListener('change', ()=>{ currentMissions[idx].end = parseInt(endSel.value,10); });
+    typeSel.addEventListener('change', ()=>{
+      currentMissions[idx].type = typeSel.value;
+      customInput.style.display = typeSel.value==='autre' ? 'block' : 'none';
+    });
+    customInput.addEventListener('input', ()=>{ currentMissions[idx].customLabel = customInput.value.trim(); });
+    row.querySelector('.mission-remove').addEventListener('click', ()=>{
+      currentMissions.splice(idx,1);
+      renderMissionsUI();
+    });
+    list.appendChild(row);
+  });
+}
+document.getElementById('addMissionBtn').addEventListener('click', ()=>{
+  currentMissions.push({ start:11*60+30, end:12*60+30, type:'pause_station', customLabel:'' });
+  renderMissionsUI();
+});
+
+function readFormAsShift(){
+  const dateStr = isoDate(modalDate);
+  const type = document.getElementById('typeSelect').value;
+  if(!type) return { date:dateStr, type:'' };
+  if(FULL_DAY_TYPES.includes(type)){
+    return { date:dateStr, type, start:null, end:null, missions:[] };
+  }
+  const start = parseInt(document.getElementById('startSelect').value,10);
+  const end = parseInt(document.getElementById('endSelect').value,10);
+  if(end <= start) return null;
+  const missions = currentMissions.filter(m=>m.end > m.start);
+  return { date:dateStr, type, start, end, missions };
+}
+
+async function persistCurrentDay(){
+  const dateStr = isoDate(modalDate);
+  const result = readFormAsShift();
+  if(result === null){
+    document.getElementById('shiftError').style.display = 'block';
+    return false;
+  }
+  let updated = shifts.filter(s=> s.date!==dateStr);
+  if(result.type){
+    updated.push({ id: editingShiftId || ('s'+Date.now()+Math.random().toString(16).slice(2)), ...result });
+  }
+  shifts = updated;
+  await docRef.set({ shifts: updated });
+  renderDaysList();
+  return true;
+}
+
+document.getElementById('shiftSave').addEventListener('click', async ()=>{
+  const ok = await persistCurrentDay();
+  if(ok) document.getElementById('shiftOverlay').classList.add('hidden');
+});
+document.getElementById('shiftClose').addEventListener('click', ()=>{
+  document.getElementById('shiftOverlay').classList.add('hidden');
+});
+document.getElementById('shiftDelete').addEventListener('click', async ()=>{
+  const dateStr = isoDate(modalDate);
+  const updated = shifts.filter(s=>s.date!==dateStr);
+  shifts = updated;
+  await docRef.set({ shifts: updated });
+  document.getElementById('shiftOverlay').classList.add('hidden');
+  renderDaysList();
+});
+document.getElementById('dayPrevBtn').addEventListener('click', async ()=>{
+  await persistCurrentDay();
+  modalDate.setDate(modalDate.getDate()-1);
+  loadDayIntoModal();
+});
+document.getElementById('dayNextBtn').addEventListener('click', async ()=>{
+  await persistCurrentDay();
+  modalDate.setDate(modalDate.getDate()+1);
+  loadDayIntoModal();
+});
+
+/* ---------- Admin lock ---------- */
+function updateLockBtn(){
+  const btn = document.getElementById('lockBtn');
+  btn.textContent = isAdmin ? '🔓 Modification' : '🔒 Admin';
+  btn.classList.toggle('active', isAdmin);
+  document.getElementById('settingsBtn').classList.toggle('show', isAdmin);
+}
+document.getElementById('lockBtn').addEventListener('click', ()=>{
+  if(isAdmin){
+    isAdmin = false;
+    localStorage.setItem('planningAdmin','0');
+    updateLockBtn();
+    renderDaysList();
+  } else {
+    document.getElementById('codeInput').value='';
+    document.getElementById('codeError').style.display='none';
+    document.getElementById('codeOverlay').classList.remove('hidden');
+  }
+});
+document.getElementById('codeCancel').addEventListener('click', ()=>{
+  document.getElementById('codeOverlay').classList.add('hidden');
+});
+document.getElementById('codeSubmit').addEventListener('click', ()=>{
+  const val = document.getElementById('codeInput').value;
+  if(val === appConfig.adminCode){
+    isAdmin = true;
+    localStorage.setItem('planningAdmin','1');
+    updateLockBtn();
+    renderDaysList();
+    document.getElementById('codeOverlay').classList.add('hidden');
+  } else {
+    document.getElementById('codeError').style.display='block';
+  }
+});
+
+/* ---------- Settings (admin code + colors) ---------- */
+function applyColors(){
+  document.documentElement.style.setProperty('--banner', appConfig.colors.banner);
+  document.documentElement.style.setProperty('--teal', appConfig.colors.teal);
+  document.documentElement.style.setProperty('--paper', appConfig.colors.paper);
+}
+function openSettingsModal(){
+  document.getElementById('newCodeInput').value = '';
+  document.getElementById('colorBanner').value = appConfig.colors.banner;
+  document.getElementById('colorAccent').value = appConfig.colors.teal;
+  document.getElementById('colorPaper').value = appConfig.colors.paper;
+  document.getElementById('settingsSaved').style.display = 'none';
+  document.getElementById('settingsOverlay').classList.remove('hidden');
+}
+function flashSaved(){
+  const el2 = document.getElementById('settingsSaved');
+  el2.style.display = 'block';
+  setTimeout(()=>{ el2.style.display = 'none'; }, 2000);
+}
+document.getElementById('settingsBtn').addEventListener('click', openSettingsModal);
+document.getElementById('settingsClose').addEventListener('click', ()=>{
+  document.getElementById('settingsOverlay').classList.add('hidden');
+});
+document.getElementById('saveCodeBtn').addEventListener('click', async ()=>{
+  const val = document.getElementById('newCodeInput').value.trim();
+  if(!val) return;
+  await configRef.set({ adminCode: val, colors: appConfig.colors }, { merge:true });
+  flashSaved();
+});
+document.getElementById('saveColorsBtn').addEventListener('click', async ()=>{
+  const colors = {
+    banner: document.getElementById('colorBanner').value,
+    teal: document.getElementById('colorAccent').value,
+    paper: document.getElementById('colorPaper').value,
+  };
+  await configRef.set({ adminCode: appConfig.adminCode, colors }, { merge:true });
+  flashSaved();
+});
+document.getElementById('resetColorsBtn').addEventListener('click', async ()=>{
+  await configRef.set({ adminCode: appConfig.adminCode, colors: DEFAULT_COLORS }, { merge:true });
+  document.getElementById('colorBanner').value = DEFAULT_COLORS.banner;
+  document.getElementById('colorAccent').value = DEFAULT_COLORS.teal;
+  document.getElementById('colorPaper').value = DEFAULT_COLORS.paper;
+  flashSaved();
+});
+
+/* ---------- Weekly quick entry (main shift only — use day tap for missions) ---------- */
+let weekEntryState = [];
+
+function openWeekEntryModal(){
+  const dates = weekDates();
+  weekEntryState = dates.map(d=>{
+    const dateStr = isoDate(d);
+    const existing = shifts.find(s=>s.date===dateStr);
+    return existing
+      ? { date:dateStr, type: existing.type, start: existing.start ?? 9*60, end: existing.end ?? 17*60, missions: existing.missions || [] }
+      : { date:dateStr, type:'', start:9*60, end:17*60, missions:[] };
+  });
+  renderWeekEntryRows(dates);
+  document.getElementById('weekOverlay').classList.remove('hidden');
+}
+
+function renderWeekEntryRows(dates){
+  const container = document.getElementById('weekEntryRows');
+  container.innerHTML = '';
+  dates.forEach((d,i)=>{
+    const state = weekEntryState[i];
+    const row = el('div','week-entry-row');
+    row.innerHTML = `
+      <div class="day-name">${DAY_NAMES_SHORT[(d.getDay()+6)%7]} ${d.getDate()} ${MONTHS_FR[d.getMonth()].slice(0,3)}</div>
+      <select class="row-type">
+        <option value="">Vide</option>
+        <option value="caisse">Caisse</option>
+        <option value="station">Station</option>
+        <option value="repos">Repos</option>
+        <option value="vacances">Vacances</option>
+      </select>
+      <div class="row-time" style="display:none">
+        <div class="time-row">
+          <select class="row-start"></select>
+          <select class="row-end"></select>
+        </div>
+      </div>
+    `;
+    const typeSel = row.querySelector('.row-type');
+    const timeBox = row.querySelector('.row-time');
+    const startSel = row.querySelector('.row-start');
+    const endSel = row.querySelector('.row-end');
+
+    typeSel.value = state.type;
+    buildTimeOptions(startSel, state.start);
+    buildTimeOptions(endSel, state.end);
+
+    function refresh(){
+      timeBox.style.display = (state.type && !FULL_DAY_TYPES.includes(state.type)) ? 'block' : 'none';
+    }
+    typeSel.addEventListener('change', ()=>{ state.type = typeSel.value; refresh(); });
+    startSel.addEventListener('change', ()=>{ state.start = parseInt(startSel.value,10); });
+    endSel.addEventListener('change', ()=>{ state.end = parseInt(endSel.value,10); });
+
+    refresh();
+    container.appendChild(row);
+  });
+}
+
+async function saveWeekEntry(){
+  const dateSet = weekEntryState.map(s=>s.date);
+  let updated = shifts.filter(s=>!dateSet.includes(s.date));
+  weekEntryState.forEach(s=>{
+    if(!s.type) return;
+    if(FULL_DAY_TYPES.includes(s.type)){
+      updated.push({ id:'s'+Date.now()+Math.random().toString(16).slice(2), date:s.date, type:s.type, start:null, end:null, missions:[] });
+    } else {
+      if(s.end <= s.start) return;
+      updated.push({ id:'s'+Date.now()+Math.random().toString(16).slice(2), date:s.date, type:s.type, start:s.start, end:s.end, missions:s.missions||[] });
+    }
+  });
+  await docRef.set({ shifts: updated });
+  document.getElementById('weekOverlay').classList.add('hidden');
+}
+
+document.getElementById('weekEntryBtn').addEventListener('click', openWeekEntryModal);
+document.getElementById('weekEntryCancel').addEventListener('click', ()=>{
+  document.getElementById('weekOverlay').classList.add('hidden');
+});
+document.getElementById('weekEntrySave').addEventListener('click', saveWeekEntry);
+
+/* ---------- Firestore sync ---------- */
+docRef.onSnapshot((snap)=>{
+  const data = snap.data();
+  shifts = (data && data.shifts) ? data.shifts : [];
+  document.getElementById('status').textContent = '';
+  renderDaysList();
+}, (err)=>{
+  document.getElementById('status').textContent = 'Connexion impossible — vérifie ta connexion internet.';
+  console.error(err);
+});
+
+configRef.onSnapshot((snap)=>{
+  const data = snap.data();
+  if(data){
+    appConfig.adminCode = data.adminCode || DEFAULT_ADMIN_CODE;
+    appConfig.colors = { ...DEFAULT_COLORS, ...(data.colors||{}) };
+  }
+  applyColors();
+});
+
+updateLockBtn();
+renderDaysList();
+</script>
+</body>
+</html>
