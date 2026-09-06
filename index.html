@@ -114,6 +114,7 @@
     margin:0 14px 10px;
   }
   .day-card.editable{ cursor:pointer; }
+  .day-card.today{ border:2px solid #E63946; box-shadow:0 0 0 1px #E63946; }
   .day-card.repos, .day-card.vacances{ background:var(--rest-bg); }
   .day-card-top{
     display:flex;
@@ -578,8 +579,8 @@ function renderDaysList(){
     const dateStr = isoDate(d);
     const shift = shifts.find(s=>s.date===dateStr);
 
-    const card = el('div','day-card'+(isAdmin?' editable':'')+(shift?` ${shift.type}`:' empty'));
-
+const isToday = dateStr === isoDate(new Date());
+const card = el('div','day-card'+(isAdmin?' editable':'')+(shift?` ${shift.type}`:' empty')+(isToday?' today':''));
     const top = el('div','day-card-top');
     const info = el('div','day-info');
     info.innerHTML = `<span class="day-name">${DAY_NAMES_SHORT[(d.getDay()+6)%7]}</span><span class="day-date">${d.getDate()} ${MONTHS_FR[d.getMonth()].slice(0,3)}</span>`;
